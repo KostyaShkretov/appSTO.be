@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
+// use Illuminate\Support\Facades\Hash;
 
 
 class AuthController extends Controller
@@ -16,21 +17,24 @@ class AuthController extends Controller
             'password' => 'required|max:255',
         ]);
 
-        $user = User::where('email', $data['email'])->first();
+        // $user = User::where('email', $data['email'])->first();
 
-        if (!$user) {
+        // if (!Hash::check($data['password'], $user->password)) {
+        //     return response()->json([
+        //         'message' => 'Неверный email или пароль'
+        //     ], 401);
+        // }
+        if (!Auth::attempt($data)) {
             return response()->json([
-                'message' => 'Пользователь не найден'
-            ], 404);
-        }
-        if (!Hash::check($data['password'], $user->password)) {
-            return response()->json([
-                'message' => 'Пароль не правильный'
+                'message' => 'Неверный email или пароль'
             ], 401);
         }
+        $user = Auth::user();
+
+        $token = $user->createToken('api-token')->plainTextToken;
         return response()->json([
-            'message' => 'Успешный вход',
             'user' => $user,
+            'token' => $token,
         ], 200);
     }
 
@@ -41,6 +45,18 @@ class AuthController extends Controller
             'email' => 'required|email|max:255|unique:users,email',
             'password' => 'required|max:255|confirmed',
         ]);
-        return $data;
+
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => $data['password'],
+        ]);
+
+        $token = $user->createToken('api-token')->plainTextToken;
+
+        return response()->json([
+            'user' => $user,
+            'token' => $token,
+        ], 201);
     }
 }

@@ -17,6 +17,9 @@ class MasterController extends Controller
         ])->get();
     }
     public function show(Master $master) {
+        // if( auth('sanctum')->user() ) {  
+        //     $master->specialization = "HELO";
+        // } Если пользователь авторизован 
         return $master;
     }
 }    
